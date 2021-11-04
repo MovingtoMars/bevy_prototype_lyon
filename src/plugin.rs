@@ -11,22 +11,15 @@
 //! that creates a mesh for each entity that has been spawned as a
 //! `ShapeBundle`.
 
-use bevy::{
-    app::{AppBuilder, Plugin},
-    asset::{Assets, Handle},
-    ecs::{
-        query::Added,
+use bevy::{app::{AppBuilder, Plugin}, asset::{Assets, Handle}, ecs::{
         schedule::{StageLabel, SystemStage},
         system::{IntoSystem, Query, ResMut},
-    },
-    log::error,
-    render::{
+    }, log::error, prelude::{Changed, Or}, render::{
         color::Color,
         draw::Visible,
         mesh::{Indices, Mesh},
         pipeline::PrimitiveTopology,
-    },
-};
+    }};
 use lyon_tessellation::{
     self as tess, path::Path, BuffersBuilder, FillTessellator, FillVertex, FillVertexConstructor,
     StrokeTessellator, StrokeVertex, StrokeVertexConstructor,
@@ -118,7 +111,11 @@ fn complete_shape_bundle(
             &ShapeColors,
             &mut Visible,
         ),
-        Added<Path>,
+        Or<(
+            Changed<DrawMode>,
+            Changed<Path>,
+            Changed<ShapeColors>,
+        )>,
     >,
 ) {
     for (tess_mode, path, mut mesh, colors, mut visible) in query.iter_mut() {
@@ -153,7 +150,7 @@ fn complete_shape_bundle(
         }
 
         *mesh = meshes.add(build_mesh(&buffers));
-        visible.is_visible = true;
+        // visible.is_visible = true;
     }
 }
 
